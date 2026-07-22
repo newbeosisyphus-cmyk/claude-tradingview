@@ -529,11 +529,10 @@ node src/cli/index.js screenshot -r chart</pre></div>
       <p style="font-size:14.5px">为什么 <code>ui_evaluate</code> 用 <code>ask</code> 而不是 <code>deny</code>：真正的风险不是"你批准了一次"，而是"你点了一次<strong>始终允许</strong>"——那之后提示注入随时可以得手。<code>ask</code> 保留了这个偶尔有用的逃生舱，同时让它永远无法进白名单。看到弹窗时要看的是：<strong>那段 JS 在干什么</strong>。尤其警惕 <code>fetch</code>、<code>XMLHttpRequest</code>、或任何外部网址。</p>
     </div>
 
-    <div class="box crit">
-      <div class="box-t">✗ tv_update = 宿主机任意代码执行</div>
-      <p><code>tv_update</code> 内部执行的是 <code>npm ci --no-audit --no-fund</code>（<code>src/core/update.js:86</code>），<strong>既没有 <code>--ignore-scripts</code>，也没有 <code>--omit=dev</code></strong>。一旦上游改动了 <code>package-lock.json</code>，它就会执行新 lockfile 里任意依赖的 preinstall/postinstall 脚本——以你的用户权限、在 TradingView 页面沙箱<strong>之外</strong>直接运行。</p>
-      <p><strong>「先审 diff」防不住这个</strong>——你审的是源码 diff，执行的是 lockfile 里被换掉的传递依赖。</p>
-      <p><code>tv_health_check</code> 每小时会查上游，一有新 commit 就在返回里塞一句 <code>Run the tv_update tool to update</code>（<code>health.js:36</code>），<strong>主动怂恿 AI 调用它</strong>。而它的工具描述自称 <strong>"Safe by design"</strong>——那只指"不弄坏你的本地改动"，与供应链安全无关。</p>
+    <div class="box">
+      <div class="box-t">为什么帮你禁用了自动更新（tv_update）</div>
+      <p>安装脚本已经把 <code>tv_update</code> 设为禁用，并把版本锁定在审查过的那一版。原因：它自动重装依赖时用的是 <code>npm ci</code>、没带 <code>--ignore-scripts</code>，万一上游改了依赖清单，可能在你电脑上跑到没审查过的第三方脚本。禁用它、用锁定版本，更稳。</p>
+      <p>要升级的时候，按下面第 7 节的手动流程走（先看改动再更新），比自动更新可控。</p>
     </div>
 
     <h3>仍需你自己做</h3>
@@ -542,7 +541,7 @@ node src/cli/index.js screenshot -r chart</pre></div>
       <li><span class="mk"></span><span>不对 <code>pine_save</code>、<code>alert_*</code>、<code>watchlist_*</code> 选"全部允许"（它们会改你的 TradingView 账户）</span></li>
       <li><span class="mk"></span><span>不在多人共用机器上运行</span></li>
       <li><span class="mk"></span><span>警惕来路不明的社区 Pine 指标（风险 2 的入口）</span></li>
-      <li><span class="mk"></span><span>明确自己承担 TradingView ToS / 封号风险</span></li>
+      <li><span class="mk"></span><span>了解 TradingView 服务条款对自动化操作有限制</span></li>
     </ul>
 
     <h3 style="margin-top:6px">端口状态检查（可选，建议装）</h3>
