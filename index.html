@@ -201,6 +201,16 @@
     display:flex; flex-direction:column; gap:7px;
   }
   .foot b{color:var(--ink-soft); font-weight:600}
+
+  /* FAQ 折叠区 */
+  details.faq{border:1px solid var(--rule); border-radius:9px; background:var(--surface); box-shadow:var(--shadow); overflow:hidden; margin-bottom:10px}
+  details.faq summary{cursor:pointer; padding:14px 18px; font-weight:640; font-size:15.5px; list-style:none; display:flex; gap:10px; align-items:flex-start}
+  details.faq summary::-webkit-details-marker{display:none}
+  details.faq summary::before{content:"＋"; color:var(--accent); font-weight:700; flex:none; line-height:1.5}
+  details.faq[open] summary::before{content:"－"}
+  details.faq[open] summary{border-bottom:1px solid var(--rule-soft)}
+  details.faq .faq-body{padding:14px 18px; display:flex; flex-direction:column; gap:11px; color:var(--ink-soft); font-size:15px}
+  details.faq .faq-body p{margin:0; max-width:none}
 </style>
 
 <div class="wrap">
@@ -642,6 +652,49 @@ npm rm -g tradingview-mcp
 # 6) Windows：用过 launch 的 MSIX 兜底就删掉 %LOCALAPPDATA%\tradingview-mcp\（约 330MB）</pre></div>
     <p><strong>调试端口无需清理</strong>——不是持久设置，正常启动 TradingView 就没有了。</p>
     <p><strong>云端残留需手动清</strong>：如果用它创建过价格提醒、保存过 Pine 脚本到 TradingView 云端、改过自选表，这些在<strong>你的 TradingView 账户里</strong>，需要在 TradingView 界面手动删（建议卸载前先用 <code>alert_list</code> / <code>alert_delete</code> 清理提醒）。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">09</span>常见问题 · 装不上看这里</h2>
+
+    <details class="faq">
+      <summary>装的时候，Claude 一让 TradingView 带调试端口启动就闪退 / 跳掉</summary>
+      <div class="faq-body">
+        <p>TradingView 是 Electron 应用，有单实例锁。旧进程<strong>没完全退干净</strong>时带端口启动，新实例会把参数移交给旧实例、然后自己退出——就是你看到的"跳掉"。根子是旧进程没杀干净：先彻底退掉、确认真退了，再带端口启动就行。</p>
+        <p><strong>macOS</strong>（在终端整段粘贴）：</p>
+        <div class="code"><div class="code-h"><span>终端 · macOS</span></div><pre>osascript -e 'quit app "TradingView"'; sleep 3
+pkill -9 -f 'TradingView.app/Contents/MacOS/TradingView' 2&gt;/dev/null; sleep 2
+lsof -iTCP:9222 -sTCP:LISTEN          # 这步没输出才正常
+open -a "TradingView" --args --remote-debugging-port=9222
+sleep 5; curl -s http://127.0.0.1:9222/json/version   # 看到 JSON 就成了</pre></div>
+        <p>还跳掉，就直接跑二进制、绕过 <code>open</code>：</p>
+        <div class="code"><div class="code-h"><span>终端 · macOS 备选</span></div><pre>"/Applications/TradingView.app/Contents/MacOS/TradingView" --remote-debugging-port=9222 &gt;/dev/null 2&gt;&amp;1 &amp;
+sleep 5; curl -s http://127.0.0.1:9222/json/version</pre></div>
+        <p>端口起来后<strong>别再普通双击打开 TradingView</strong>（会另开一个没端口的实例）。</p>
+        <p><strong>Windows</strong>：任务管理器里彻底结束 TradingView 进程，再运行 <code>"%LOCALAPPDATA%\TradingView\TradingView.exe" --remote-debugging-port=9222</code>。</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>把链接发给 Claude，它说"做不了 / 无法在你电脑上操作"</summary>
+      <div class="faq-body">
+        <p>你多半用的是 claude.ai 网页版或手机 App——它们碰不到你的电脑。必须用 <strong>Claude Code</strong>（桌面版或命令行），再把链接发给它。</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>它没直接装，先讲了一遍须知、还问我确认</summary>
+      <div class="faq-body">
+        <p>正常的，这是特意让它先问你一声。回一句"我知道了，继续"就往下走。</p>
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>它一直弹窗让我点"允许"</summary>
+      <div class="faq-body">
+        <p>逐条点"允许"就行，这是安全机制，每步让你过目。别嫌烦，也别去关。</p>
+      </div>
+    </details>
   </section>
 
   <footer class="foot">
